@@ -213,10 +213,19 @@ function YearlyRevenueCard({ bills, year }: { bills: SalesBill[]; year: number }
 
 function ChartSection({ bills, today }: { bills: SalesBill[]; today: Date }) {
   const year = today.getFullYear()
+  const user = useAuthStore((s) => s.currentUser)!
+
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      <WeeklyRevenueCard bills={bills} today={today} />
-      <YearlyRevenueCard bills={bills} year={year} />
+    <div className={cn(user.role === 'admin' ? 'flex gap-4' : 'grid grid-cols-1 gap-4')}>
+      <div className={user.role === 'admin' ? 'w-1/2' : 'w-full'}>
+        <WeeklyRevenueCard bills={bills} today={today} />
+      </div>
+
+      {user.role === 'admin' && (
+        <div className="w-1/2">
+          <YearlyRevenueCard bills={bills} year={year} />
+        </div>
+      )}
     </div>
   )
 }

@@ -258,7 +258,7 @@ export function NewBillPage() {
             <div className="space-y-6">
 
               {/* Customer card */}
-              <Card className="bg-brand-raised">
+              <Card>
                 <CardHeader>
                   <CardTitle className="text-base">Customer</CardTitle>
                 </CardHeader>
@@ -309,7 +309,7 @@ export function NewBillPage() {
               </Card>
 
               {/* Items card */}
-              <Card className="bg-brand-raised">
+              <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0">
                   <CardTitle className="text-base">Items</CardTitle>
                   <Button type="button" variant="ghost" size="sm" onClick={() => append(EMPTY_ITEM)}>
@@ -340,7 +340,7 @@ export function NewBillPage() {
 
             {/* Right column — sticky totals */}
             <div>
-              <Card className="bg-brand-raised lg:sticky lg:top-6">
+              <Card className="lg:sticky lg:top-6">
                 <CardHeader>
                   <CardTitle className="text-base">Totals</CardTitle>
                 </CardHeader>

@@ -9,6 +9,7 @@ import { BillHistoryPage } from '@/pages/billing/BillHistoryPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { InventoryPage } from '@/pages/inventory/InventoryPage'
 import { GodownsPage } from '@/pages/inventory/GodownsPage'
+import { LowStockPage } from '@/pages/inventory/LowStockPage'
 import { ProductsPage } from '@/pages/inventory/ProductsPage'
 import { TransferLogPage } from '@/pages/inventory/TransferLogPage'
 import { LoginPage } from '@/pages/LoginPage'
@@ -63,6 +64,7 @@ export default function App() {
               <Route path="/purchases/:id"      element={<PurchaseDetailPage />} />
               <Route path="/inventory"          element={<InventoryPage />} />
               <Route path="/inventory/products" element={<ProductsPage />} />
+              <Route path="/inventory/low-stock" element={<LowStockPage />} />
               <Route path="/inventory/godowns"  element={<GodownsPage />} />
               <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
                 <Route path="/admin/counters" element={<CounterManagementPage />} />

@@ -88,6 +88,13 @@ export const NAV_ITEMS: NavItem[] = [
     showInSidebar: true,
   },
   {
+    path: '/inventory/low-stock',
+    label: 'Low Stock',
+    iconName: 'AlertTriangle',
+    roles: ALL,
+    showInSidebar: true,
+  },
+  {
     path: '/inventory/godowns',
     label: 'Godowns',
     iconName: 'Warehouse',

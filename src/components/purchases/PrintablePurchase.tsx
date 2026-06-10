@@ -13,9 +13,13 @@ function formatDate(iso: string) {
   })
 }
 
+function godownName(godownId: string) {
+  return GODOWNS_SEED.find((godown) => godown.id === godownId)?.name ?? godownId
+}
+
 export function PrintablePurchase({ bill }: { bill: PurchaseBill }) {
   const sectionLabel = SECTIONS.find((section) => section.key === bill.section)?.label ?? bill.section
-  const godownLabel = GODOWNS_SEED.find((godown) => godown.id === bill.godownId)?.name ?? bill.godownId
+  const godownLabel = godownName(bill.godownId)
 
   return (
     <div className="printable-bill bg-white p-8 text-sm text-gray-800">
@@ -68,6 +72,9 @@ export function PrintablePurchase({ bill }: { bill: PurchaseBill }) {
             <tr key={`${item.productId}-${item.productName}-${index}`} className="border-b border-gray-200 text-gray-800 odd:bg-white even:bg-gray-50">
               <td className="py-2">
                 <span>{item.productName}</span>
+                <Badge variant="outline" className="ml-2 h-5 px-1.5 text-[10px]">
+                  {godownName(item.godownId)}
+                </Badge>
                 {!item.productId && (
                   <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-[10px]">
                     new

@@ -77,6 +77,7 @@ export interface PurchaseItem {
   sizeDimension?: string
   quantity: number
   unit: string
+  godownId: string
   unitPrice: number // per unit (purchase price)
   subtotal: number  // quantity * unitPrice
 }

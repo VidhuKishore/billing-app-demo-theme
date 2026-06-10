@@ -1,4 +1,5 @@
 import {
+  AlertTriangle,
   BarChart2,
   BarChart3,
   Boxes,
@@ -27,9 +28,11 @@ import { getNavFor } from '@/lib/navigation'
 import { getUserSections } from '@/lib/userSections'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
+import { useInventoryStore } from '@/store/inventoryStore'
 import type { Role } from '@/types'
 
 const ICON_MAP: Record<string, LucideIcon> = {
+  AlertTriangle,
   LayoutDashboard,
   Receipt,
   Repeat2,
@@ -57,6 +60,7 @@ interface SidebarInnerProps {
 
 export function SidebarInner({ onNavigate }: SidebarInnerProps) {
   const { currentUser, logout } = useAuthStore()
+  const products = useInventoryStore((state) => state.products)
   const navigate = useNavigate()
 
   function handleLogout() {
@@ -72,6 +76,12 @@ export function SidebarInner({ onNavigate }: SidebarInnerProps) {
   const accessibleSections = currentUser
     ? SECTIONS.filter((section) => getUserSections(currentUser.id).includes(section.key))
     : []
+  const lowStockCount = currentUser
+    ? products.filter((product) =>
+        getUserSections(currentUser.id).includes(product.section) &&
+        product.stock <= product.lowStockThreshold
+      ).length
+    : 0
 
   return (
     <div className="relative flex h-full flex-col bg-card text-foreground">
@@ -127,6 +137,11 @@ export function SidebarInner({ onNavigate }: SidebarInnerProps) {
                 >
                   {Icon && <Icon size={16} strokeWidth={1.75} />}
                   <span>{item.label}</span>
+                  {item.path === '/inventory/low-stock' && lowStockCount > 0 && (
+                    <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-[#EF5350] px-1 font-mono text-[10px] leading-none text-white shadow-[0_0_10px_#EF5350]">
+                      {lowStockCount}
+                    </span>
+                  )}
                 </NavLink>
               </li>
             )

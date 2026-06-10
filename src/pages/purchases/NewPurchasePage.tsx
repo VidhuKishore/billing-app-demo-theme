@@ -1,7 +1,7 @@
 import * as React from 'react'
 import { useFieldArray, useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Camera, ImageIcon, Plus, Ruler, ScanLine, X } from 'lucide-react'
+import { Camera, ImageIcon, Plus, Ruler, ScanLine, Warehouse, X } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -31,6 +31,7 @@ const itemSchema = z.object({
   sizeDimension: z.string().optional(),
   quantity: z.coerce.number().min(1, 'Min 1'),
   unit: z.string().min(1, 'Unit is required'),
+  godownId: z.string().min(1, 'Godown is required'),
   unitPrice: z.coerce.number().min(0, 'Must be 0 or more'),
   subtotal: z.number().default(0),
 })
@@ -39,7 +40,6 @@ const formSchema = z.object({
   vendorName: z.string().min(1, 'Vendor name is required'),
   date: z.string().min(1),
   section: z.custom<Section>((value) => typeof value === 'string' && SECTIONS.some((section) => section.key === value)),
-  godownId: z.string().min(1, 'Select a godown'),
   imageUrl: z.string().optional(),
   items: z.array(itemSchema).min(1),
 })
@@ -53,6 +53,7 @@ const EMPTY_ITEM = {
   sizeDimension: '',
   quantity: 1,
   unit: 'pcs',
+  godownId: GODOWNS_SEED[0]?.id ?? '',
   unitPrice: 0,
   subtotal: 0,
 }
@@ -101,7 +102,6 @@ export function NewPurchasePage() {
       vendorName: '',
       date: todayInputValue(),
       section: allowedSections[0],
-      godownId: GODOWNS_SEED[0]?.id ?? '',
       imageUrl: undefined,
       items: [EMPTY_ITEM],
     },
@@ -109,7 +109,6 @@ export function NewPurchasePage() {
 
   const { fields, append, remove } = useFieldArray({ control: form.control, name: 'items' })
   const watchedSection = useWatch({ control: form.control, name: 'section' }) as Section
-  const watchedGodownId = useWatch({ control: form.control, name: 'godownId' })
   const watchedItems = useWatch({ control: form.control, name: 'items' })
   const imageUrl = useWatch({ control: form.control, name: 'imageUrl' })
 
@@ -173,13 +172,13 @@ export function NewPurchasePage() {
     if (!product || !allowedSections.includes(product.section)) return
 
     form.setValue('section', product.section, { shouldValidate: true })
-    form.setValue('godownId', product.godownId, { shouldValidate: true })
     form.setValue('items', [{
       productId: product.id,
       productName: product.name,
       sizeDimension: '',
       quantity: 1,
       unit: product.unit,
+      godownId: product.godownId,
       unitPrice: product.costPrice,
       subtotal: 0,
     }], { shouldValidate: true })
@@ -198,7 +197,6 @@ export function NewPurchasePage() {
     const product = products.find((item) => item.id === value)
     if (!product) return
     form.setValue('section', product.section, { shouldValidate: true })
-    form.setValue('godownId', product.godownId, { shouldValidate: true })
     form.setValue(`items.${index}.productId`, product.id, { shouldValidate: true })
     form.setValue(`items.${index}.productName`, product.name, { shouldValidate: true })
     form.setValue(`items.${index}.unit`, product.unit, { shouldValidate: true })
@@ -244,7 +242,7 @@ export function NewPurchasePage() {
       vendorName: values.vendorName,
       date: new Date(values.date).toISOString(),
       section: values.section,
-      godownId: values.godownId,
+      godownId: values.items[0]?.godownId ?? GODOWNS_SEED[0]?.id ?? '',
       imageUrl: values.imageUrl,
       items: values.items.map((item) => ({
         ...item,
@@ -308,24 +306,6 @@ export function NewPurchasePage() {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label>Godown</Label>
-                <Select
-                  value={watchedGodownId}
-                  onValueChange={(value) => form.setValue('godownId', value, { shouldValidate: true })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {GODOWNS_SEED.map((godown) => (
-                      <SelectItem key={godown.id} value={godown.id}>
-                        {godown.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
             </CardContent>
           </Card>
 
@@ -386,7 +366,7 @@ export function NewPurchasePage() {
                 const isNewProduct = !item?.productId
 
                 return (
-                  <div key={field.id} className="grid gap-3 border-b border-border pb-4 last:border-0 sm:grid-cols-[1.4fr_1fr_0.7fr_0.8fr_0.8fr_auto]">
+                  <div key={field.id} className="grid gap-3 border-b border-border pb-4 last:border-0 sm:grid-cols-[1.4fr_1fr_0.7fr_0.8fr_0.8fr_0.95fr_auto]">
                     <div className="space-y-2">
                       <Label>Product</Label>
                       <Select value={item?.productId || NEW_PRODUCT_VALUE} onValueChange={(value) => selectProduct(index, value)}>
@@ -461,6 +441,25 @@ export function NewPurchasePage() {
                     <div className="space-y-2">
                       <Label>Unit price</Label>
                       <Input type="number" min={0} className="font-mono tabular-nums" {...form.register(`items.${index}.unitPrice`, { valueAsNumber: true })} />
+                    </div>
+
+                    <div className="mt-7">
+                      <Select
+                        value={item?.godownId ?? GODOWNS_SEED[0]?.id ?? ''}
+                        onValueChange={(value) => form.setValue(`items.${index}.godownId`, value, { shouldValidate: true })}
+                      >
+                        <SelectTrigger aria-label="Godown" className="min-w-0">
+                          <Warehouse className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {GODOWNS_SEED.map((godown) => (
+                            <SelectItem key={godown.id} value={godown.id}>
+                              {godown.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <Button

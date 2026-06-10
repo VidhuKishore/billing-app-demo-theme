@@ -147,7 +147,7 @@ export const useInventoryStore = create<InventoryState>()(
         return {
           products: state.products.map((product) =>
             product.id === input.productId
-              ? { ...product, stock: product.stock + input.quantity, updatedAt: now }
+              ? { ...product, godownId: input.godownId, stock: product.stock + input.quantity, updatedAt: now }
               : product
           ),
         }

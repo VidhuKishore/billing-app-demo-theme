@@ -15,18 +15,16 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { SECTIONS } from '@/lib/constants'
-import { getUserName } from '@/lib/userSections'
+import { getUserSections } from '@/lib/userSections'
 import { exportCsv } from '@/lib/exportCsv'
 import {
   getBillFinalAmount,
-  getBillSqFt,
-  getBillStatus,
   scopeBillsForUser,
   selectBillsForDate,
-  selectDayTotals,
 } from '@/lib/reportSelectors'
 import { useAuthStore } from '@/store/authStore'
 import { useBillingStore } from '@/store/billingStore'
+import type { SalesBill, Section } from '@/types'
 
 const INR = new Intl.NumberFormat('en-IN', {
   style: 'currency',
@@ -39,11 +37,20 @@ function csvDate(iso?: string) {
 }
 
 function displayDate(iso?: string) {
-  return iso ? format(new Date(iso), 'dd MMM yyyy') : '-'
+  return iso ? format(new Date(iso), 'dd/MM/yyyy') : '-'
 }
 
-function staffName(userId: string) {
-  return getUserName(userId)
+function billNumber(bill: SalesBill) {
+  const year = new Date(bill.date).getFullYear()
+  return `INV-${year}-${String(bill.billNumber).padStart(4, '0')}`
+}
+
+function sectionLabel(sectionKey: Section) {
+  return SECTIONS.find((section) => section.key === sectionKey)?.label ?? sectionKey
+}
+
+function tableTitle(sectionKey: Section) {
+  return `${sectionLabel(sectionKey)} Daily Estimate`
 }
 
 export function DailyReportPage() {
@@ -56,23 +63,26 @@ export function DailyReportPage() {
   const scopedBills = scopeBillsForUser(bills, currentUser)
   const dayBills = selectBillsForDate(scopedBills, reportDate)
     .sort((a, b) => a.billNumber - b.billNumber)
-  const totals = selectDayTotals(dayBills)
+  const accessibleSections = SECTIONS.filter((section) => getUserSections(currentUser.id).includes(section.key))
+  const groupedBills = accessibleSections
+    .map((section) => ({
+      section: section.key,
+      bills: dayBills.filter((bill) => bill.section === section.key),
+    }))
+    .filter((group) => group.bills.length > 0)
+  const grandTotal = dayBills.reduce((sum, bill) => sum + getBillFinalAmount(bill), 0)
 
   function exportDailyCsv() {
     exportCsv(
       `daily-report-${selectedDate}.csv`,
-      ['Bill#', 'Customer', 'Address', 'Items', 'Sq/-', 'Amount', 'Date', 'Delivery', 'Staff', 'Status'],
-      dayBills.map((bill) => [
-        bill.billNumber,
+      ['No.', 'Bill No.', 'Date', 'Customer Name', 'Address', 'Grand Total'],
+      dayBills.map((bill, index) => [
+        index + 1,
+        billNumber(bill),
+        csvDate(bill.date),
         bill.customerName || bill.customerPhone,
         bill.customerAddress ?? '',
-        bill.items.length,
-        getBillSqFt(bill),
         getBillFinalAmount(bill),
-        csvDate(bill.date),
-        csvDate(bill.deliveryDate),
-        staffName(bill.createdBy),
-        getBillStatus(bill),
       ]),
     )
     toast.success('Daily report exported')
@@ -82,9 +92,9 @@ export function DailyReportPage() {
     <div className="space-y-6">
       <div className="report-screen-only flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-medium">Daily Report</h1>
+          <h1 className="text-2xl font-medium">Daily Sales Report</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {dayBills.length} bill{dayBills.length !== 1 ? 's' : ''} for {format(reportDate, 'dd MMM yyyy')}
+            {dayBills.length} bill{dayBills.length !== 1 ? 's' : ''} for {format(reportDate, 'dd MMM yyyy')} · {INR.format(grandTotal)}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -113,49 +123,46 @@ export function DailyReportPage() {
           <p className="mt-2 font-mono text-sm tabular-nums">{format(reportDate, 'dd MMMM yyyy')}</p>
         </div>
 
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Bill #</TableHead>
-              <TableHead>Customer</TableHead>
-              <TableHead>Address</TableHead>
-              <TableHead>Section</TableHead>
-              <TableHead className="text-right">Items</TableHead>
-              <TableHead className="text-right">Sq.ft</TableHead>
-              <TableHead className="text-right">Final Amount</TableHead>
-              <TableHead>Delivery</TableHead>
-              <TableHead>Staff</TableHead>
-              <TableHead>Status</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {dayBills.map((bill) => {
-              const sectionLabel = SECTIONS.find((section) => section.key === bill.section)?.label ?? bill.section
-              return (
-                <TableRow key={bill.id}>
-                  <TableCell className="font-mono tabular-nums">{bill.billNumber}</TableCell>
-                  <TableCell>{bill.customerName || bill.customerPhone}</TableCell>
-                  <TableCell>{bill.customerAddress ?? '-'}</TableCell>
-                  <TableCell>{sectionLabel}</TableCell>
-                  <TableCell className="text-right font-mono tabular-nums">{bill.items.length}</TableCell>
-                  <TableCell className="text-right font-mono tabular-nums">{getBillSqFt(bill)}</TableCell>
-                  <TableCell className="text-right font-mono tabular-nums">{INR.format(getBillFinalAmount(bill))}</TableCell>
-                  <TableCell>{displayDate(bill.deliveryDate)}</TableCell>
-                  <TableCell>{staffName(bill.createdBy)}</TableCell>
-                  <TableCell className="capitalize">{getBillStatus(bill)}</TableCell>
-                </TableRow>
-              )
-            })}
-          </TableBody>
-          <TableFooter>
-            <TableRow className="font-semibold">
-              <TableCell colSpan={5}>Day total</TableCell>
-              <TableCell className="text-right font-mono tabular-nums">{totals.sqFt}</TableCell>
-              <TableCell className="text-right font-mono tabular-nums">{INR.format(totals.revenue)}</TableCell>
-              <TableCell colSpan={3}>{totals.billCount} bill{totals.billCount !== 1 ? 's' : ''}</TableCell>
-            </TableRow>
-          </TableFooter>
-        </Table>
+        <div className="space-y-6">
+          {groupedBills.map((group) => {
+            const sectionTotal = group.bills.reduce((sum, bill) => sum + getBillFinalAmount(bill), 0)
+            return (
+              <div key={group.section} className="space-y-3">
+                <h2 className="text-center text-lg font-semibold text-foreground">{tableTitle(group.section)}</h2>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>No.</TableHead>
+                      <TableHead>Or. No</TableHead>
+                      <TableHead>Or. Date</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Address</TableHead>
+                      <TableHead className="text-right">Grand Total</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {group.bills.map((bill, index) => (
+                      <TableRow key={bill.id}>
+                        <TableCell className="font-mono tabular-nums">{index + 1}</TableCell>
+                        <TableCell className="font-mono tabular-nums">{billNumber(bill)}</TableCell>
+                        <TableCell>{displayDate(bill.date)}</TableCell>
+                        <TableCell>{bill.customerName || bill.customerPhone}</TableCell>
+                        <TableCell>{bill.customerAddress ?? '-'}</TableCell>
+                        <TableCell className="text-right font-mono tabular-nums">{INR.format(getBillFinalAmount(bill))}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                  <TableFooter>
+                    <TableRow className="font-semibold">
+                      <TableCell colSpan={5}>Total</TableCell>
+                      <TableCell className="text-right font-mono tabular-nums">{INR.format(sectionTotal)}</TableCell>
+                    </TableRow>
+                  </TableFooter>
+                </Table>
+              </div>
+            )
+          })}
+        </div>
         {dayBills.length === 0 && (
           <EmptyState
             icon={ReceiptText}

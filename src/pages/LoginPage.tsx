@@ -1,8 +1,18 @@
-import { ArrowRight, Hammer, Power, ShieldCheck } from 'lucide-react'
+import * as React from 'react'
+import { ArrowLeft, ArrowRight, Hammer, Power, ShieldCheck } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
 import { COMPANY } from '@/lib/brand'
-import { SECTION_COLORS } from '@/lib/constants'
+import { ADMIN_PASSWORD, SECTION_COLORS } from '@/lib/constants'
 import { getAdminUser } from '@/lib/userSections'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
@@ -38,12 +48,19 @@ function CounterCard({
 }: {
   counter: Counter
   index: number
-  onSelect: (userId: string) => void
+  onSelect: (target: LoginTarget) => void
 }) {
   return (
     <button
       type="button"
-      onClick={() => onSelect(counter.id)}
+      onClick={() => onSelect({
+        id: counter.id,
+        name: counter.name,
+        initials: counter.initials,
+        label: counter.label,
+        password: counter.password,
+        isAdmin: false,
+      })}
       className="group h-full text-left transition duration-200 hover:-translate-y-1"
       style={{ animationDelay: `${index * 70}ms` }}
     >
@@ -88,15 +105,51 @@ function CounterCard({
   )
 }
 
+interface LoginTarget {
+  id: string
+  name: string
+  initials: string
+  label: string
+  password: string
+  isAdmin: boolean
+}
+
 export function LoginPage() {
   const login = useAuthStore((state) => state.login)
   const counters = useCounterStore((state) => state.counters)
+  const adminPassword = useCounterStore((state) => state.adminPassword)
   const navigate = useNavigate()
   const admin = getAdminUser()
   const activeCounters = counters.filter((counter) => counter.active)
+  const [selectedTarget, setSelectedTarget] = React.useState<LoginTarget | null>(null)
+  const [password, setPassword] = React.useState('')
+  const [error, setError] = React.useState('')
+  const [forgotPassword, setForgotPassword] = React.useState(false)
 
-  function handleSelect(userId: string) {
-    login(userId)
+  function openTarget(target: LoginTarget) {
+    setSelectedTarget(target)
+    setPassword('')
+    setError('')
+    setForgotPassword(false)
+  }
+
+  function closeDialog() {
+    setSelectedTarget(null)
+    setPassword('')
+    setError('')
+    setForgotPassword(false)
+  }
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!selectedTarget) return
+
+    if (password !== selectedTarget.password) {
+      setError('Incorrect password. Try again.')
+      return
+    }
+
+    login(selectedTarget.id)
     navigate('/dashboard')
   }
 
@@ -135,10 +188,21 @@ export function LoginPage() {
 
         <div className="mt-10 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {activeCounters.map((counter, index) => (
-            <CounterCard key={counter.id} counter={counter} index={index} onSelect={handleSelect} />
+            <CounterCard key={counter.id} counter={counter} index={index} onSelect={openTarget} />
           ))}
 
-          <button type="button" onClick={() => handleSelect(admin.id)} className="group h-full text-left transition duration-200 hover:-translate-y-1">
+          <button
+            type="button"
+            onClick={() => openTarget({
+              id: admin.id,
+              name: admin.name,
+              initials: 'SV',
+              label: 'Owner',
+              password: adminPassword || ADMIN_PASSWORD,
+              isAdmin: true,
+            })}
+            className="group h-full text-left transition duration-200 hover:-translate-y-1"
+          >
             <div className="flex h-full flex-col rounded-2xl border border-brand-light/40 bg-card p-6 transition duration-200 group-hover:glow-highlight">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-brand-dark to-brand-deepest font-mono text-sm font-bold text-white ring-2 ring-brand-light/30">
@@ -167,6 +231,73 @@ export function LoginPage() {
           </button>
         </div>
       </main>
+
+      <Dialog open={!!selectedTarget} onOpenChange={(open) => { if (!open) closeDialog() }}>
+        <DialogContent className={cn(error && !forgotPassword && 'animate-shake')}>
+          {selectedTarget && !forgotPassword && (
+            <>
+              <button
+                type="button"
+                className="absolute left-4 top-4 rounded-sm text-muted-foreground transition hover:text-foreground"
+                onClick={closeDialog}
+                aria-label="Back to workspace selection"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </button>
+              <DialogHeader className="items-center text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-mid font-mono text-base font-bold text-white dark:text-brand-deepest">
+                  {selectedTarget.initials}
+                </div>
+                <DialogTitle>{selectedTarget.name}</DialogTitle>
+                <DialogDescription>{selectedTarget.label}</DialogDescription>
+              </DialogHeader>
+
+              <form className="space-y-4" onSubmit={handleSubmit}>
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(event) => {
+                    setPassword(event.target.value)
+                    setError('')
+                  }}
+                  placeholder="Enter your password"
+                  autoFocus
+                />
+                {error && <p className="text-sm font-medium text-destructive">{error}</p>}
+                <Button type="submit" className="w-full">
+                  Sign in
+                </Button>
+                <button
+                  type="button"
+                  className="w-full text-center text-sm text-muted-foreground transition hover:text-foreground"
+                  onClick={() => {
+                    setForgotPassword(true)
+                    setError('')
+                  }}
+                >
+                  Forgot password?
+                </button>
+              </form>
+            </>
+          )}
+
+          {selectedTarget && forgotPassword && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Reset Password</DialogTitle>
+                <DialogDescription>
+                  {selectedTarget.isAdmin
+                    ? 'Contact Anthropic support or reset via the constants file.'
+                    : 'Contact your administrator (Subramaniam V.) to reset your password.'}
+                </DialogDescription>
+              </DialogHeader>
+              <Button type="button" variant="outline" onClick={() => setForgotPassword(false)}>
+                Back to sign in
+              </Button>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <footer className="relative z-10 px-5 pb-8 text-center text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-2">

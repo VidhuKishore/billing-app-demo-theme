@@ -177,6 +177,18 @@
       transform: translateX(100%);
     }
   }
+
+  @keyframes shake {
+    0%, 100% {
+      transform: translate(-50%, -50%);
+    }
+    25% {
+      transform: translate(calc(-50% - 6px), -50%);
+    }
+    75% {
+      transform: translate(calc(-50% + 6px), -50%);
+    }
+  }
 }
 
 @layer components {
@@ -193,6 +205,10 @@
     content: "";
     background: linear-gradient(90deg, transparent, #0474C418, transparent);
     animation: shimmer 1.6s infinite;
+  }
+
+  .animate-shake {
+    animation: shake 0.22s ease-in-out;
   }
 
   input,
@@ -236,14 +252,17 @@
   aside,
   header,
   [data-sonner-toaster],
-  .report-screen-only {
+  .report-screen-only,
+  .expense-screen-only {
     display: none !important;
   }
   body * { visibility: hidden; }
   .printable-bill, .printable-bill *,
-  .report-printable, .report-printable * { visibility: visible; }
+  .report-printable, .report-printable *,
+  .expense-printable, .expense-printable * { visibility: visible; }
   .printable-bill,
-  .report-printable {
+  .report-printable,
+  .expense-printable {
     position: absolute;
     left: 0;
     top: 0;
@@ -253,7 +272,8 @@
   }
   .receipt-edge { display: none; }
   .printable-bill *,
-  .report-printable * {
+  .report-printable *,
+  .expense-printable * {
     background: #fff !important;
     color: #000 !important;
     box-shadow: none !important;
@@ -285,14 +305,25 @@
     border-collapse: collapse;
     font-size: 10px;
   }
+  .expense-printable table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+  }
   .report-printable th,
-  .report-printable td {
+  .report-printable td,
+  .expense-printable th,
+  .expense-printable td {
     border: 1px solid #222 !important;
     padding: 4px 5px !important;
     color: black !important;
   }
-  .report-printable tfoot td {
+  .report-printable tfoot td,
+  .expense-printable tfoot td {
     font-weight: 700 !important;
+  }
+  .expense-print-only {
+    display: inline !important;
   }
   @page { margin: 12mm; size: A4 portrait; }
 }

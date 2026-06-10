@@ -71,6 +71,13 @@ export const NAV_ITEMS: NavItem[] = [
     roles: ALL,
     showInSidebar: false,   // dynamic segment
   },
+  {
+    path: '/expenses',
+    label: 'Expenses',
+    iconName: 'Receipt',
+    roles: ALL,
+    showInSidebar: true,
+  },
 
   // ── Inventory ──────────────────────────────────────────────────────────────
   {

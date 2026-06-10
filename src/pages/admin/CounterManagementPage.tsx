@@ -1,6 +1,6 @@
 
 import * as React from 'react'
-import { GripVertical, Plus, Users } from 'lucide-react'
+import { GripVertical, KeyRound, Plus, Users } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Badge } from '@/components/ui/badge'
@@ -50,9 +50,13 @@ export function CounterManagementPage() {
   const counters = useCounterStore((state) => state.counters)
   const addCounter = useCounterStore((state) => state.addCounter)
   const updateCounter = useCounterStore((state) => state.updateCounter)
+  const updatePassword = useCounterStore((state) => state.updatePassword)
   const deleteCounter = useCounterStore((state) => state.deleteCounter)
   const reorderCounters = useCounterStore((state) => state.reorderCounters)
   const [editingCounter, setEditingCounter] = React.useState<Counter | null>(null)
+  const [passwordTarget, setPasswordTarget] = React.useState<Counter | null>(null)
+  const [newPassword, setNewPassword] = React.useState('')
+  const [confirmPassword, setConfirmPassword] = React.useState('')
   const [formOpen, setFormOpen] = React.useState(false)
   const [form, setForm] = React.useState<CounterForm>(EMPTY_FORM)
   const [draggingId, setDraggingId] = React.useState<string | null>(null)
@@ -106,6 +110,28 @@ export function CounterManagementPage() {
 
     toast.success('Counter saved.')
     setFormOpen(false)
+  }
+
+  function openPasswordDialog(counter: Counter) {
+    setPasswordTarget(counter)
+    setNewPassword('')
+    setConfirmPassword('')
+  }
+
+  function savePassword() {
+    if (!passwordTarget) return
+    if (newPassword.length < 4) {
+      toast.error('Password must be at least 4 characters.')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords must match.')
+      return
+    }
+
+    updatePassword(passwordTarget.id, newPassword)
+    toast.success('Password updated.')
+    setPasswordTarget(null)
   }
 
   function handleDrop(targetId: string) {
@@ -173,6 +199,10 @@ export function CounterManagementPage() {
                 </div>
 
                 <div className="flex gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => openPasswordDialog(counter)}>
+                    <KeyRound className="mr-2 h-4 w-4" />
+                    Change Password
+                  </Button>
                   <Button type="button" variant="outline" size="sm" onClick={() => openEdit(counter)}>
                     Edit
                   </Button>
@@ -256,6 +286,47 @@ export function CounterManagementPage() {
               Cancel
             </Button>
             <Button type="button" onClick={saveCounter}>
+              Save
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!passwordTarget} onOpenChange={(open) => { if (!open) setPasswordTarget(null) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Change Password</DialogTitle>
+            <DialogDescription>
+              Set a new sign-in password for {passwordTarget?.name}.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">New password</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(event) => setNewPassword(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirm password</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setPasswordTarget(null)}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={savePassword}>
               Save
             </Button>
           </DialogFooter>

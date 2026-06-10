@@ -1,5 +1,7 @@
 import type { Godown, Section, User } from '@/types'
 
+export const ADMIN_PASSWORD = 'admin123'
+
 // ─── Section metadata ────────────────────────────────────────────────────────
 
 export interface SectionMeta {

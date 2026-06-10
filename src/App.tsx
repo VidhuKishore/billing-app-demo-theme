@@ -7,6 +7,7 @@ import { CounterManagementPage } from '@/pages/admin/CounterManagementPage'
 import { BillDetailPage } from '@/pages/billing/BillDetailPage'
 import { BillHistoryPage } from '@/pages/billing/BillHistoryPage'
 import { DashboardPage } from '@/pages/DashboardPage'
+import { ExpensePage } from '@/pages/expenses/ExpensePage'
 import { InventoryPage } from '@/pages/inventory/InventoryPage'
 import { GodownsPage } from '@/pages/inventory/GodownsPage'
 import { LowStockPage } from '@/pages/inventory/LowStockPage'
@@ -62,6 +63,7 @@ export default function App() {
               <Route path="/purchases"          element={<PurchaseListPage />} />
               <Route path="/purchases/new"      element={<NewPurchasePage />} />
               <Route path="/purchases/:id"      element={<PurchaseDetailPage />} />
+              <Route path="/expenses"           element={<ExpensePage />} />
               <Route path="/inventory"          element={<InventoryPage />} />
               <Route path="/inventory/products" element={<ProductsPage />} />
               <Route path="/inventory/low-stock" element={<LowStockPage />} />

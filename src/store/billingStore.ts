@@ -167,6 +167,8 @@ export const useBillingStore = create<BillingState>()(
           total:           subtotal,
           discount:        input.discount  ?? 0,
           paidAmount:      input.paidAmount ?? 0,
+          hardPercent:     input.hardPercent ?? 0,
+          branch:          input.branch,
           status:          getBillStatus(subtotal, input.discount ?? 0, input.paidAmount ?? 0),
           createdBy:       input.createdBy,
           createdAt:       now,
@@ -198,7 +200,7 @@ export const useBillingStore = create<BillingState>()(
     }),
     {
       name: 'billing-app-bills',
-      version: 2,
+      version: 3,
       migrate: (persisted: unknown) => {
         const state = persisted as { bills?: unknown[]; _nextCounter?: number }
         state.bills = ((state.bills ?? []) as Record<string, unknown>[]).map((bill) => {
@@ -217,6 +219,8 @@ export const useBillingStore = create<BillingState>()(
             subtotal,
             discount,
             paidAmount,
+            hardPercent: typeof bill.hardPercent === 'number' ? bill.hardPercent : 0,
+            branch: typeof bill.branch === 'string' ? bill.branch : undefined,
             status: typeof bill.status === 'string'
               ? bill.status
               : getBillStatus(total, discount, paidAmount),

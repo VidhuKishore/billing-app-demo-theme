@@ -131,6 +131,8 @@ export interface SalesBill {
   total: number        // sum of item subtotals (pre-discount)
   discount: number     // default 0
   paidAmount: number   // default 0
+  hardPercent?: number // Hard(%) amount, default 0
+  branch?: string      // counter/branch name shown on printed bill
   status: BillStatus   // explicit: paid | pending | partial
   // derived (not stored): finalAmount = total - discount, balanceAmount = finalAmount - paidAmount
   createdBy: string    // User.id
@@ -158,5 +160,7 @@ export interface CreateBillInput {
   }>
   discount?: number
   paidAmount?: number
+  hardPercent?: number
+  branch?: string
   createdBy: string
 }

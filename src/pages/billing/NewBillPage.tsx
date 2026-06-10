@@ -43,6 +43,7 @@ const billSchema = z.object({
   transportTime:   z.string().optional(),
   items:           z.array(itemSchema).min(1),
   discount:        z.coerce.number().min(0).default(0),
+  hardPercent:     z.coerce.number().min(0).default(0),
   paidAmount:      z.coerce.number().min(0).default(0),
 })
 
@@ -79,13 +80,14 @@ export function NewBillPage() {
       bookingDate: todayIso, deliveryDate: '',
       transport: '', transportTime: '',
       items: [EMPTY_ITEM],
-      discount: 0, paidAmount: 0,
+      discount: 0, hardPercent: 0, paidAmount: 0,
     },
   })
 
   const { fields, append, remove } = useFieldArray({ control: form.control, name: 'items' })
   const watchedItems    = useWatch({ control: form.control, name: 'items'      })
   const watchedDiscount = useWatch({ control: form.control, name: 'discount'   })
+  const watchedHard     = useWatch({ control: form.control, name: 'hardPercent' })
   const watchedPaid     = useWatch({ control: form.control, name: 'paidAmount' })
 
   const total = (watchedItems ?? []).reduce((sum, item) => {
@@ -96,8 +98,10 @@ export function NewBillPage() {
   }, 0)
 
   const discount      = Number(watchedDiscount) || 0
+  const hardPercent   = Number(watchedHard)     || 0
   const paidAmount    = Number(watchedPaid)      || 0
   const finalAmount   = total - discount
+  const hardAmount    = finalAmount * hardPercent / 100
   const balanceAmount = finalAmount - paidAmount
 
   function onSubmit(values: FormValues) {
@@ -124,9 +128,11 @@ export function NewBillPage() {
           model:       item.model      || undefined,
           sqFt:        item.sqFt > 0   ? item.sqFt : undefined,
         })),
-        discount:   values.discount,
-        paidAmount: values.paidAmount,
-        createdBy:  currentUser.id,
+        discount:    values.discount,
+        hardPercent: values.hardPercent,
+        paidAmount:  values.paidAmount,
+        branch:      currentUser.name,
+        createdBy:   currentUser.id,
       })
       toast.success(`Bill ${bill.billNumber} saved`)
       navigate(`/billing/${bill.id}`)
@@ -360,6 +366,22 @@ export function NewBillPage() {
                       className="font-mono tabular-nums text-right"
                       {...form.register('discount')}
                     />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="hardPercent">HARD (%)</Label>
+                    <Input
+                      id="hardPercent"
+                      type="number"
+                      min={0}
+                      step="0.01"
+                      className="font-mono tabular-nums text-right"
+                      {...form.register('hardPercent')}
+                    />
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>Hard amount</span>
+                      <span className="font-mono tabular-nums">{INR.format(hardAmount)}</span>
+                    </div>
                   </div>
 
                   <div className="flex justify-between items-center text-sm border-t border-border pt-2">

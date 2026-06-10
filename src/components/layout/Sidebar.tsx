@@ -5,13 +5,13 @@ import {
   Boxes,
   FilePlus,
   FileText,
-  KeyRound,
   LayoutDashboard,
   LogOut,
   Package,
   PackagePlus,
   Receipt,
   Repeat2,
+  Settings,
   ShoppingCart,
   Tag,
   TrendingUp,
@@ -19,21 +19,9 @@ import {
   Warehouse,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import * as React from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { COMPANY } from '@/lib/brand'
 import { SECTION_COLORS, SECTIONS } from '@/lib/constants'
@@ -41,7 +29,6 @@ import { getNavFor } from '@/lib/navigation'
 import { getUserSections } from '@/lib/userSections'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
-import { useCounterStore } from '@/store/counterStore'
 import { useInventoryStore } from '@/store/inventoryStore'
 import type { Role } from '@/types'
 
@@ -74,33 +61,12 @@ interface SidebarInnerProps {
 
 export function SidebarInner({ onNavigate }: SidebarInnerProps) {
   const { currentUser, logout } = useAuthStore()
-  const updateAdminPassword = useCounterStore((state) => state.updateAdminPassword)
   const products = useInventoryStore((state) => state.products)
   const navigate = useNavigate()
-  const [passwordOpen, setPasswordOpen] = React.useState(false)
-  const [newPassword, setNewPassword] = React.useState('')
-  const [confirmPassword, setConfirmPassword] = React.useState('')
 
   function handleLogout() {
     logout()
     navigate('/login')
-  }
-
-  function saveAdminPassword() {
-    if (newPassword.length < 4) {
-      toast.error('Password must be at least 4 characters.')
-      return
-    }
-    if (newPassword !== confirmPassword) {
-      toast.error('Passwords must match.')
-      return
-    }
-
-    updateAdminPassword(newPassword)
-    toast.success('Password updated.')
-    setPasswordOpen(false)
-    setNewPassword('')
-    setConfirmPassword('')
   }
 
   const navItems = currentUser
@@ -209,82 +175,44 @@ export function SidebarInner({ onNavigate }: SidebarInnerProps) {
       <Separator className="bg-border" />
 
       {currentUser && (
-        <>
-          <div className="m-3 rounded-xl border border-border bg-muted px-3 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-mid font-mono text-xs font-bold text-white dark:text-brand-deepest">
-                  {currentUser.name.split(' ').map((part) => part[0]).join('').slice(0, 2)}
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-foreground">{currentUser.name}</p>
-                  <p className="font-mono text-[10px] text-brand-mid dark:text-brand-light">
-                    {ROLE_LABELS[currentUser.role] ?? 'Billing Counter'}
-                  </p>
-                </div>
+        <div className="m-3 rounded-xl border border-border bg-muted px-3 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-brand-mid font-mono text-xs font-bold text-white dark:text-brand-deepest">
+                {currentUser.name.split(' ').map((part) => part[0]).join('').slice(0, 2)}
               </div>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-foreground">{currentUser.name}</p>
+                <p className="font-mono text-[10px] text-brand-mid dark:text-brand-light">
+                  {ROLE_LABELS[currentUser.role] ?? 'Billing Counter'}
+                </p>
+              </div>
+            </div>
+            <div className="ml-2 flex shrink-0 items-center gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  navigate('/profile')
+                  onNavigate?.()
+                }}
+                aria-label="Profile settings"
+                className="text-muted-foreground hover:bg-card hover:text-foreground"
+              >
+                <Settings size={15} />
+              </Button>
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={handleLogout}
                 aria-label="Log out"
-                className="ml-2 shrink-0 text-muted-foreground hover:bg-card hover:text-[#EF5350]"
+                className="text-muted-foreground hover:bg-card hover:text-[#EF5350]"
               >
                 <LogOut size={15} />
               </Button>
             </div>
-            {currentUser.role === 'admin' && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="mt-3 w-full justify-start text-xs text-muted-foreground hover:bg-card hover:text-foreground"
-                onClick={() => setPasswordOpen(true)}
-              >
-                <KeyRound className="mr-2 h-3.5 w-3.5" />
-                Change my password
-              </Button>
-            )}
           </div>
-          <Dialog open={passwordOpen} onOpenChange={setPasswordOpen}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Change my password</DialogTitle>
-                <DialogDescription>Set a new admin sign-in password.</DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="adminNewPassword">New password</Label>
-                  <Input
-                    id="adminNewPassword"
-                    type="password"
-                    value={newPassword}
-                    onChange={(event) => setNewPassword(event.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="adminConfirmPassword">Confirm password</Label>
-                  <Input
-                    id="adminConfirmPassword"
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(event) => setConfirmPassword(event.target.value)}
-                  />
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setPasswordOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="button" onClick={saveAdminPassword}>
-                  Save
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </>
+        </div>
       )}
     </div>
   )

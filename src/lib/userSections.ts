@@ -1,4 +1,4 @@
-import { MOCK_USERS, SECTIONS } from '@/lib/constants'
+import { getStoredAdminName, MOCK_USERS, SECTIONS } from '@/lib/constants'
 import { useCounterStore } from '@/store/counterStore'
 import type { Role, Section, SectionType, User } from '@/types'
 
@@ -19,7 +19,8 @@ export function getAllSections(): Section[] {
 }
 
 export function getAdminUser() {
-  return MOCK_USERS.find((user) => user.role === 'admin')!
+  const admin = MOCK_USERS.find((user) => user.role === 'admin')!
+  return { ...admin, name: getStoredAdminName(admin.name) }
 }
 
 export function getUserSections(userId: string): Section[] {
@@ -53,7 +54,7 @@ export function getActiveUsers(): User[] {
 export function getUserName(userId: string) {
   const counter = useCounterStore.getState().counters.find((item) => item.id === userId)
   if (counter) return counter.name
-  return MOCK_USERS.find((user) => user.id === userId)?.name ?? userId
+  return getAdminUser().id === userId ? getAdminUser().name : userId
 }
 
 export function isBillingRole(role: Role) {

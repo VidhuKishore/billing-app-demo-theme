@@ -18,6 +18,7 @@ import { NewBillPage } from '@/pages/billing/NewBillPage'
 import { NewPurchasePage } from '@/pages/purchases/NewPurchasePage'
 import { PurchaseDetailPage } from '@/pages/purchases/PurchaseDetailPage'
 import { PurchaseListPage } from '@/pages/purchases/PurchaseListPage'
+import { ProfilePage } from '@/pages/profile/ProfilePage'
 import { DailyReportPage } from '@/pages/reports/DailyReportPage'
 import { MonthlyReportPage } from '@/pages/reports/MonthlyReportPage'
 import { WeeklyReportPage } from '@/pages/reports/WeeklyReportPage'
@@ -51,6 +52,7 @@ export default function App() {
             <Route element={<AppShell />}>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard"          element={<DashboardPage />} />
+              <Route path="/profile"            element={<ProfilePage />} />
               <Route path="/billing"            element={<BillHistoryPage />} />
 
               <Route element={<ProtectedRoute allowedRoles={['billing_', 'admin']} />}>

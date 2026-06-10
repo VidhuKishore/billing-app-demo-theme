@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { COMPANY } from '@/lib/brand'
-import { ADMIN_PASSWORD, SECTION_COLORS } from '@/lib/constants'
+import { getStoredAdminPassword, SECTION_COLORS } from '@/lib/constants'
 import { getAdminUser } from '@/lib/userSections'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/authStore'
@@ -117,7 +117,6 @@ interface LoginTarget {
 export function LoginPage() {
   const login = useAuthStore((state) => state.login)
   const counters = useCounterStore((state) => state.counters)
-  const adminPassword = useCounterStore((state) => state.adminPassword)
   const navigate = useNavigate()
   const admin = getAdminUser()
   const activeCounters = counters.filter((counter) => counter.active)
@@ -198,7 +197,7 @@ export function LoginPage() {
               name: admin.name,
               initials: 'SV',
               label: 'Owner',
-              password: adminPassword || ADMIN_PASSWORD,
+              password: getStoredAdminPassword(),
               isAdmin: true,
             })}
             className="group h-full text-left transition duration-200 hover:-translate-y-1"

@@ -1,6 +1,24 @@
 import type { Godown, Section, User } from '@/types'
 
 export const ADMIN_PASSWORD = 'admin123'
+export const ADMIN_PASSWORD_STORAGE_KEY = 'sr-admin-password'
+export const ADMIN_NAME_STORAGE_KEY = 'sr-admin-name'
+
+export function getStoredAdminPassword() {
+  return localStorage.getItem(ADMIN_PASSWORD_STORAGE_KEY) || ADMIN_PASSWORD
+}
+
+export function setStoredAdminPassword(password: string) {
+  localStorage.setItem(ADMIN_PASSWORD_STORAGE_KEY, password)
+}
+
+export function getStoredAdminName(fallback: string) {
+  return localStorage.getItem(ADMIN_NAME_STORAGE_KEY) || fallback
+}
+
+export function setStoredAdminName(name: string) {
+  localStorage.setItem(ADMIN_NAME_STORAGE_KEY, name)
+}
 
 // ─── Section metadata ────────────────────────────────────────────────────────
 

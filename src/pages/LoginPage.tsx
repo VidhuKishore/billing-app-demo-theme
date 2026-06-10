@@ -143,7 +143,11 @@ export function LoginPage() {
     event.preventDefault()
     if (!selectedTarget) return
 
-    if (password !== selectedTarget.password) {
+    const storedPassword = selectedTarget.isAdmin
+      ? getStoredAdminPassword()
+      : useCounterStore.getState().counters.find((counter) => counter.id === selectedTarget.id)?.password
+
+    if (password !== storedPassword) {
       setError('Incorrect password. Try again.')
       return
     }

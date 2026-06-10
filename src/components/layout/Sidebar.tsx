@@ -11,7 +11,6 @@ import {
   PackagePlus,
   Receipt,
   Repeat2,
-  Settings,
   ShoppingCart,
   Tag,
   TrendingUp,
@@ -188,29 +187,15 @@ export function SidebarInner({ onNavigate }: SidebarInnerProps) {
                 </p>
               </div>
             </div>
-            <div className="ml-2 flex shrink-0 items-center gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  navigate('/profile')
-                  onNavigate?.()
-                }}
-                aria-label="Profile settings"
-                className="text-muted-foreground hover:bg-card hover:text-foreground"
-              >
-                <Settings size={15} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleLogout}
-                aria-label="Log out"
-                className="text-muted-foreground hover:bg-card hover:text-[#EF5350]"
-              >
-                <LogOut size={15} />
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleLogout}
+              aria-label="Log out"
+              className="ml-2 shrink-0 text-muted-foreground hover:bg-card hover:text-[#EF5350]"
+            >
+              <LogOut size={15} />
+            </Button>
           </div>
         </div>
       )}

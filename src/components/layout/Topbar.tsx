@@ -1,6 +1,7 @@
-import { Bell, LogOut, Menu, PackagePlus, Search, User } from 'lucide-react'
+import { Bell, Edit2, KeyRound, LogOut, Menu, PackagePlus, Search, User } from 'lucide-react'
 import * as React from 'react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -19,9 +20,16 @@ import {
 } from '@/components/ui/sheet'
 import { ThemeToggle } from '@/components/layout/ThemeToggle'
 import { SidebarInner } from '@/components/layout/Sidebar'
-import { GODOWNS_SEED, SECTIONS } from '@/lib/constants'
+import {
+  getStoredAdminPassword,
+  GODOWNS_SEED,
+  SECTIONS,
+  setStoredAdminName,
+  setStoredAdminPassword,
+} from '@/lib/constants'
 import { getActiveUsers, getUserSections } from '@/lib/userSections'
 import { useAuthStore } from '@/store/authStore'
+import { useCounterStore } from '@/store/counterStore'
 import { useInventoryStore } from '@/store/inventoryStore'
 import { cn } from '@/lib/utils'
 import type { Product } from '@/types'
@@ -41,9 +49,27 @@ function godownName(godownId: string) {
 
 export function Topbar({ title, className }: TopbarProps) {
   const { currentUser, logout, login } = useAuthStore()
+  const counters = useCounterStore((state) => state.counters)
+  const updateCounter = useCounterStore((state) => state.updateCounter)
+  const updatePassword = useCounterStore((state) => state.updatePassword)
   const products = useInventoryStore((state) => state.products)
   const navigate = useNavigate()
   const [drawerOpen, setDrawerOpen] = React.useState(false)
+  const [userMenuOpen, setUserMenuOpen] = React.useState(false)
+  const [openForm, setOpenForm] = React.useState<'name' | 'password' | null>(null)
+  const [displayName, setDisplayName] = React.useState(currentUser?.name ?? '')
+  const [currentPassword, setCurrentPassword] = React.useState('')
+  const [newPassword, setNewPassword] = React.useState('')
+  const [confirmPassword, setConfirmPassword] = React.useState('')
+  const [passwordError, setPasswordError] = React.useState('')
+
+  const currentCounter = currentUser
+    ? counters.find((counter) => counter.id === currentUser.id)
+    : undefined
+
+  React.useEffect(() => {
+    setDisplayName(currentUser?.name ?? '')
+  }, [currentUser?.name])
 
   const lowStockProducts = React.useMemo(() => {
     if (!currentUser) return []
@@ -56,6 +82,80 @@ export function Topbar({ title, className }: TopbarProps) {
   function handleLogout() {
     logout()
     navigate('/login')
+  }
+
+  function resetInlineForms() {
+    setOpenForm(null)
+    setDisplayName(currentUser?.name ?? '')
+    setCurrentPassword('')
+    setNewPassword('')
+    setConfirmPassword('')
+    setPasswordError('')
+  }
+
+  function openNameForm() {
+    setOpenForm('name')
+    setDisplayName(currentUser?.name ?? '')
+    setPasswordError('')
+  }
+
+  function openPasswordForm() {
+    setOpenForm('password')
+    setCurrentPassword('')
+    setNewPassword('')
+    setConfirmPassword('')
+    setPasswordError('')
+  }
+
+  function saveName() {
+    if (!currentUser) return
+    const nextName = displayName.trim()
+    if (!nextName) return
+
+    if (currentUser.role === 'admin') {
+      setStoredAdminName(nextName)
+      login(currentUser.id)
+    } else if (currentCounter) {
+      updateCounter(currentCounter.id, {
+        name: nextName,
+        label: currentCounter.label,
+        process: currentCounter.process,
+        active: currentCounter.active,
+      })
+      login(currentCounter.id)
+    }
+
+    toast.success('Name updated successfully')
+    resetInlineForms()
+  }
+
+  function savePassword() {
+    if (!currentUser) return
+    const storedPassword = currentUser.role === 'admin'
+      ? getStoredAdminPassword()
+      : useCounterStore.getState().counters.find((counter) => counter.id === currentUser.id)?.password
+
+    if (currentPassword !== storedPassword) {
+      setPasswordError('Current password is incorrect')
+      return
+    }
+    if (newPassword.length < 4) {
+      setPasswordError('Password must be at least 4 characters')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Passwords do not match')
+      return
+    }
+
+    if (currentUser.role === 'admin') {
+      setStoredAdminPassword(newPassword)
+    } else {
+      updatePassword(currentUser.id, newPassword)
+    }
+
+    toast.success('Password updated successfully')
+    resetInlineForms()
   }
 
   return (
@@ -104,7 +204,10 @@ export function Topbar({ title, className }: TopbarProps) {
       {/* Theme toggle */}
       <ThemeToggle />
 
-      <DropdownMenu>
+      <DropdownMenu open={userMenuOpen} onOpenChange={(open) => {
+        setUserMenuOpen(open)
+        if (!open) resetInlineForms()
+      }}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="outline"
@@ -193,6 +296,86 @@ export function Topbar({ title, className }: TopbarProps) {
                   {currentUser.email}
                 </p>
               </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onSelect={(event) => {
+                  event.preventDefault()
+                  openNameForm()
+                }}
+              >
+                <Edit2 size={14} className="mr-2" />
+                Edit Name
+              </DropdownMenuItem>
+              {openForm === 'name' && (
+                <div className="space-y-2 px-2 py-2">
+                  <Input
+                    value={displayName}
+                    onChange={(event) => setDisplayName(event.target.value)}
+                    className="h-8 text-xs"
+                    aria-label="Display name"
+                  />
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button type="button" size="sm" className="h-8 text-xs" onClick={saveName}>
+                      Save
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" className="h-8 text-xs" onClick={resetInlineForms}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
+              <DropdownMenuItem
+                onSelect={(event) => {
+                  event.preventDefault()
+                  openPasswordForm()
+                }}
+              >
+                <KeyRound size={14} className="mr-2" />
+                Change Password
+              </DropdownMenuItem>
+              {openForm === 'password' && (
+                <div className="space-y-2 px-2 py-2">
+                  <Input
+                    type="password"
+                    value={currentPassword}
+                    onChange={(event) => {
+                      setCurrentPassword(event.target.value)
+                      setPasswordError('')
+                    }}
+                    placeholder="Current password"
+                    className="h-8 text-xs"
+                  />
+                  <Input
+                    type="password"
+                    value={newPassword}
+                    onChange={(event) => {
+                      setNewPassword(event.target.value)
+                      setPasswordError('')
+                    }}
+                    placeholder="New password, min 4 chars"
+                    className="h-8 text-xs"
+                  />
+                  <Input
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(event) => {
+                      setConfirmPassword(event.target.value)
+                      setPasswordError('')
+                    }}
+                    placeholder="Confirm new password"
+                    className="h-8 text-xs"
+                  />
+                  {passwordError && <p className="text-xs font-medium text-destructive">{passwordError}</p>}
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button type="button" size="sm" className="h-8 text-xs" onClick={savePassword}>
+                      Save
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" className="h-8 text-xs" onClick={resetInlineForms}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
               <DropdownMenuSeparator />
             </>
           )}

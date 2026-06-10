@@ -197,7 +197,7 @@ export const useCounterStore = create<CounterState>()(
         }),
     }),
     {
-      name: 'billing-app-counters',
+      name: 'sr-counter-store',
       version: 2,
       migrate: (persistedState) => {
         const state = persistedState as Partial<CounterState> | undefined

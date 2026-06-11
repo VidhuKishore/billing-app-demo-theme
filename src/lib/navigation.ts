@@ -13,7 +13,7 @@ export interface NavItem {
   showInSidebar: boolean
 }
 
-const ALL: Role[]        = ['admin', 'billing_a', 'billing_b']
+const ALL: Role[]        = ['admin', 'billing_a', 'billing_b', 'billing_c', 'billing_d', 'billing_e']
 const ADMIN_ONLY: Role[] = ['admin']
 
 export const NAV_ITEMS: NavItem[] = [
@@ -75,6 +75,13 @@ export const NAV_ITEMS: NavItem[] = [
     path: '/expenses',
     label: 'Expenses',
     iconName: 'Receipt',
+    roles: ALL,
+    showInSidebar: true,
+  },
+  {
+    path: '/expenses/hardware',
+    label: 'Hardware Expense',
+    iconName: 'ShoppingBag',
     roles: ALL,
     showInSidebar: true,
   },

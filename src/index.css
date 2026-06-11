@@ -248,6 +248,10 @@
   display: none;
 }
 
+.hardware-slip-print {
+  display: none;
+}
+
 @media print {
   aside,
   header,
@@ -326,4 +330,35 @@
     display: inline !important;
   }
   @page { margin: 12mm; size: A4 portrait; }
+}
+
+@media print {
+  body.printing-hardware-slip * {
+    visibility: hidden !important;
+  }
+
+  body.printing-hardware-slip .hardware-slip-print,
+  body.printing-hardware-slip .hardware-slip-print * {
+    visibility: visible !important;
+  }
+
+  body.printing-hardware-slip .hardware-slip-print {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: none;
+    background: #FFB6C1 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body.printing-hardware-slip .hardware-slip-print * {
+    background: #FFB6C1 !important;
+    color: #000 !important;
+    border-color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
 }

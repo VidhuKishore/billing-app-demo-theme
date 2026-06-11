@@ -42,6 +42,13 @@ export const NAV_ITEMS: NavItem[] = [
     showInSidebar: true,
   },
   {
+    path: '/commission',
+    label: 'Commission',
+    iconName: 'BadgePercent',
+    roles: ALL,
+    showInSidebar: true,
+  },
+  {
     path: '/billing/:id',
     label: 'Bill Detail',
     iconName: 'FileText',

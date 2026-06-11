@@ -6,6 +6,7 @@ import { AppShell } from '@/components/layout/AppShell'
 import { CounterManagementPage } from '@/pages/admin/CounterManagementPage'
 import { BillDetailPage } from '@/pages/billing/BillDetailPage'
 import { BillHistoryPage } from '@/pages/billing/BillHistoryPage'
+import { CommissionPage } from '@/pages/commission/CommissionPage'
 import { DashboardPage } from '@/pages/DashboardPage'
 import { ExpensePage } from '@/pages/expenses/ExpensePage'
 import { HardwareExpensePage } from '@/pages/expenses/HardwareExpensePage'
@@ -60,6 +61,7 @@ export default function App() {
                 <Route path="/billing/new" element={<NewBillPage />} />
               </Route>
               <Route path="/billing/:id"        element={<BillDetailPage />} />
+              <Route path="/commission"         element={<CommissionPage />} />
               <Route path="/purchase"           element={<Navigate to="/purchases" replace />} />
               <Route path="/purchase/new"       element={<Navigate to="/purchases/new" replace />} />
               <Route path="/purchase/:id"       element={<LegacyPurchaseDetailRedirect />} />

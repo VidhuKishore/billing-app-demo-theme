@@ -48,6 +48,8 @@ export function PrintableBill({ bill }: { bill: SalesBill }) {
   const sectionLabel = SECTIONS.find((section) => section.key === bill.section)?.label ?? bill.section
   const estimateTitle = `${sectionLabel.toUpperCase()} ESTIMATE`
   const totalQty = bill.items.reduce((sum, item) => sum + item.quantity, 0)
+  const commission = bill.commission ?? { H: '', M: '', L: '' }
+  const hasCommission = [commission.H, commission.M, commission.L].some((value) => value.trim().length > 0)
 
   return (
     <div className="client-bill-print printable-bill bg-white p-6 font-serif text-[12px] leading-tight text-black">
@@ -137,6 +139,21 @@ export function PrintableBill({ bill }: { bill: SalesBill }) {
           </tr>
         </tbody>
       </table>
+
+      {hasCommission && (
+        <section className="bill-border mt-3 border border-black text-[12px]">
+          <div className="grid grid-cols-3 border-b border-black text-center font-bold">
+            <div className="border-r border-black py-1">H</div>
+            <div className="border-r border-black py-1">M</div>
+            <div className="py-1">L</div>
+          </div>
+          <div className="grid min-h-[34px] grid-cols-3 text-center">
+            <div className="whitespace-pre-wrap border-r border-black px-2 py-2">{commission.H}</div>
+            <div className="whitespace-pre-wrap border-r border-black px-2 py-2">{commission.M}</div>
+            <div className="whitespace-pre-wrap px-2 py-2">{commission.L}</div>
+          </div>
+        </section>
+      )}
 
       <section className="mt-3 grid grid-cols-[1fr_230px] gap-6 text-[12px]">
         <div className="pt-2 italic">

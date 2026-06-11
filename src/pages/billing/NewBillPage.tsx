@@ -45,6 +45,11 @@ const billSchema = z.object({
   discount:        z.coerce.number().min(0).default(0),
   hardPercent:     z.coerce.number().min(0).default(0),
   paidAmount:      z.coerce.number().min(0).default(0),
+  commission:      z.object({
+    H: z.string().default(''),
+    M: z.string().default(''),
+    L: z.string().default(''),
+  }).default({ H: '', M: '', L: '' }),
 })
 
 type FormInput = z.input<typeof billSchema>
@@ -81,6 +86,7 @@ export function NewBillPage() {
       transport: '', transportTime: '',
       items: [EMPTY_ITEM],
       discount: 0, hardPercent: 0, paidAmount: 0,
+      commission: { H: '', M: '', L: '' },
     },
   })
 
@@ -130,6 +136,7 @@ export function NewBillPage() {
         })),
         discount:    values.discount,
         hardPercent: values.hardPercent,
+        commission:  values.commission,
         paidAmount:  values.paidAmount,
         branch:      currentUser.name,
         createdBy:   currentUser.id,
@@ -340,6 +347,26 @@ export function NewBillPage() {
                   >
                     <Plus className="h-4 w-4 mr-1" /> Add item
                   </Button>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Commission</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    {(['H', 'M', 'L'] as const).map((key) => (
+                      <div key={key} className="space-y-2">
+                        <Input
+                          type="text"
+                          className="min-h-[60px] w-full rounded-lg border-2 border-brand-border p-3 text-center"
+                          {...form.register(`commission.${key}`)}
+                        />
+                        <Label className="block text-center">{key}</Label>
+                      </div>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             </div>

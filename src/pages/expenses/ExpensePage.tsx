@@ -1,5 +1,5 @@
 import * as React from 'react'
-import { Download, FileSpreadsheet, Pencil, Printer, Trash2 } from 'lucide-react'
+import { Download, Pencil, Printer, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 import { Button } from '@/components/ui/button'
@@ -47,15 +47,6 @@ function csvRows(expenses: Expense[]) {
     expense.amount,
     expense.addedBy,
   ])
-}
-
-interface SheetJsGlobal {
-  utils: {
-    aoa_to_sheet: (data: (string | number)[][]) => unknown
-    book_new: () => unknown
-    book_append_sheet: (workbook: unknown, worksheet: unknown, name: string) => void
-  }
-  writeFile: (workbook: unknown, filename: string) => void
 }
 
 export function ExpensePage() {
@@ -169,24 +160,6 @@ export function ExpensePage() {
     )
   }
 
-  function exportExcel() {
-    const maybeXlsx = (window as Window & { XLSX?: SheetJsGlobal }).XLSX
-    if (!maybeXlsx) {
-      exportExpensesCsv('expenses.xlsx.csv')
-      toast.info('Excel export is unavailable; CSV downloaded instead')
-      return
-    }
-
-    const worksheet = maybeXlsx.utils.aoa_to_sheet([
-      ['Date', 'Category', 'Description', 'Amount', 'Added By'],
-      ...csvRows(visibleExpenses),
-    ])
-    const workbook = maybeXlsx.utils.book_new()
-    maybeXlsx.utils.book_append_sheet(workbook, worksheet, 'Expenses')
-    maybeXlsx.writeFile(workbook, 'expenses.xlsx')
-    toast.success('Expenses exported')
-  }
-
   return (
     <div className="space-y-6">
       <div className="expense-screen-only flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -205,10 +178,6 @@ export function ExpensePage() {
           }}>
             <Download className="mr-2 h-4 w-4" />
             Export CSV
-          </Button>
-          <Button type="button" variant="outline" onClick={exportExcel}>
-            <FileSpreadsheet className="mr-2 h-4 w-4" />
-            Export Excel
           </Button>
         </div>
       </div>

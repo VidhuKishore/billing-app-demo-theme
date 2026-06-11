@@ -1,5 +1,6 @@
 import {
   AlertTriangle,
+  BadgePercent,
   BarChart2,
   BarChart3,
   Boxes,
@@ -34,6 +35,7 @@ import type { Role } from '@/types'
 
 const ICON_MAP: Record<string, LucideIcon> = {
   AlertTriangle,
+  BadgePercent,
   LayoutDashboard,
   Receipt,
   Repeat2,

@@ -3,11 +3,23 @@ import { persist } from 'zustand/middleware'
 
 import type { BillStatus, CreateBillInput, SalesBill } from '@/types'
 
+const EMPTY_COMMISSION = { H: '', M: '', L: '' }
+
 function getBillStatus(total: number, discount: number, paidAmount: number): BillStatus {
   const finalAmount = Math.max(total - discount, 0)
   if (paidAmount >= finalAmount) return 'paid'
   if (paidAmount > 0) return 'partial'
   return 'pending'
+}
+
+function normalizeCommission(value: unknown) {
+  if (!value || typeof value !== 'object') return EMPTY_COMMISSION
+  const commission = value as Record<string, unknown>
+  return {
+    H: typeof commission.H === 'string' ? commission.H : '',
+    M: typeof commission.M === 'string' ? commission.M : '',
+    L: typeof commission.L === 'string' ? commission.L : '',
+  }
 }
 
 // ── 10 historical bills for demo richness ─────────────────────────────────────
@@ -168,6 +180,7 @@ export const useBillingStore = create<BillingState>()(
           discount:        input.discount  ?? 0,
           paidAmount:      input.paidAmount ?? 0,
           hardPercent:     input.hardPercent ?? 0,
+          commission:      normalizeCommission(input.commission),
           branch:          input.branch,
           status:          getBillStatus(subtotal, input.discount ?? 0, input.paidAmount ?? 0),
           createdBy:       input.createdBy,
@@ -200,7 +213,7 @@ export const useBillingStore = create<BillingState>()(
     }),
     {
       name: 'billing-app-bills',
-      version: 3,
+      version: 4,
       migrate: (persisted: unknown) => {
         const state = persisted as { bills?: unknown[]; _nextCounter?: number }
         state.bills = ((state.bills ?? []) as Record<string, unknown>[]).map((bill) => {
@@ -220,6 +233,7 @@ export const useBillingStore = create<BillingState>()(
             discount,
             paidAmount,
             hardPercent: typeof bill.hardPercent === 'number' ? bill.hardPercent : 0,
+            commission: normalizeCommission(bill.commission),
             branch: typeof bill.branch === 'string' ? bill.branch : undefined,
             status: typeof bill.status === 'string'
               ? bill.status

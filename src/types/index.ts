@@ -132,6 +132,11 @@ export interface SalesBill {
   discount: number     // default 0
   paidAmount: number   // default 0
   hardPercent?: number // Hard(%) amount, default 0
+  commission?: {
+    H: string
+    M: string
+    L: string
+  }
   branch?: string      // counter/branch name shown on printed bill
   status: BillStatus   // explicit: paid | pending | partial
   // derived (not stored): finalAmount = total - discount, balanceAmount = finalAmount - paidAmount
@@ -161,6 +166,11 @@ export interface CreateBillInput {
   discount?: number
   paidAmount?: number
   hardPercent?: number
+  commission?: {
+    H: string
+    M: string
+    L: string
+  }
   branch?: string
   createdBy: string
 }
